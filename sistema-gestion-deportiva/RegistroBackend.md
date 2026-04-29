@@ -15,15 +15,15 @@
 
 ## Funcionalidades principales
 
-* ✅ Registro de usuarios
-* ✅ Login con validación de credenciales
-* ✅ Encriptación de contraseñas (BCrypt)
-* ✅ Persistencia de datos en MySQL
-* ✅ API REST
+* Registro de usuarios
+* Login con validación de credenciales
+* Encriptación de contraseñas (BCrypt)
+* Persistencia de datos en MySQL
+* API REST
 
 ---
 
-## 🛢️ Base de datos
+## Base de datos
 
 * Motor: MySQL
 * Base de datos: `gestion_deportiva`
@@ -31,14 +31,14 @@
 
 ---
 
-## 🔒 Seguridad
+## Seguridad
 
 * Contraseñas encriptadas con BCrypt
 * Validación de credenciales en el backend
 
 ---
 
-## 📌 Estado del proyecto
+## Estado del proyecto
 
 ✔ Backend funcional
 ✔ Conexión a base de datos operativa
