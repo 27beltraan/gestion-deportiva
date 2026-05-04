@@ -10,6 +10,8 @@ export default function Login() {
   const router = useRouter()
 
   const handleLogin = async () => {
+    console.log('Intentando login...') // 👈 debug
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -17,9 +19,11 @@ export default function Login() {
 
     if (error) {
       alert(error.message)
-    } else {
-    router.push('/dashboard')
+      return
     }
+
+   
+    router.push('/dashboard')
   }
 
   return (
@@ -42,7 +46,7 @@ export default function Login() {
 
       <br /><br />
 
-      <button onClick={handleLogin}>
+      <button type="button" onClick={handleLogin}>
         Iniciar sesión
       </button>
     </div>

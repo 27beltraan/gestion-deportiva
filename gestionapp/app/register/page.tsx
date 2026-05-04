@@ -2,13 +2,25 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 export default function Register() {
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  const router = useRouter()
+
   const handleRegister = async () => {
+    //VALIDACIÓN
+    if (!nombre || !email || !password) {
+      alert('Completa todos los campos')
+      return
+    }
+
+    console.log('Registrando:', { nombre, email })
+
+    //CREAR USUARIO EN AUTH
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -22,28 +34,31 @@ export default function Register() {
     const user = data.user
 
     if (!user) {
-      alert('Usuario no creado')
+      alert('No se pudo crear el usuario')
       return
     }
 
-    // insertar en tabla usuarios
+    //GUARDAR EN TABLA USUARIOS
     const { error: insertError } = await supabase
       .from('usuarios')
       .insert([
         {
           id: user.id,
-          email: email,
+          email: user.email,
           nombre: nombre,
         },
       ])
 
     if (insertError) {
       console.log(insertError)
-      alert('Error guardando usuario')
+      alert('Error guardando datos')
       return
     }
 
     alert('Usuario registrado correctamente 🔥')
+
+    //REDIRIGIR 
+    router.push('/login')
   }
 
   return (
@@ -53,6 +68,7 @@ export default function Register() {
       <input
         type="text"
         placeholder="Nombre"
+        value={nombre}
         onChange={(e) => setNombre(e.target.value)}
       />
 
@@ -61,6 +77,7 @@ export default function Register() {
       <input
         type="email"
         placeholder="Correo"
+        value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
 
@@ -69,12 +86,13 @@ export default function Register() {
       <input
         type="password"
         placeholder="Contraseña"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
       <br /><br />
 
-      <button onClick={handleRegister}>
+      <button type="button" onClick={handleRegister}>
         Registrarse
       </button>
     </div>
