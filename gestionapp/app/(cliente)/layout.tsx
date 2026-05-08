@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Image from "next/image";
 import Link from "next/link";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
+import { supabase } from "@/lib/supabase";
 
 import {
   Home,
-  Calendar,
+  Dumbbell,
   CreditCard,
   User,
   Bell,
@@ -24,12 +26,52 @@ export default function ClienteLayout({
 
   const [open, setOpen] = useState(false);
 
+  const [loading, setLoading] = useState(true);
+
   const pathname = usePathname();
+
+  const router = useRouter();
+
+  // proteger rutas
+  useEffect(() => {
+
+    const verificarUsuario = async () => {
+
+      const { data: authData } = await supabase.auth.getUser();
+
+      // no logueado
+      if (!authData.user) {
+
+        router.push("/login");
+
+        return;
+      }
+
+      setLoading(false);
+    };
+
+    verificarUsuario();
+
+  }, []);
+
+  // loading
+  if (loading) {
+
+    return (
+      <div className="h-screen flex items-center justify-center">
+
+        <p className="text-xl font-semibold">
+          Cargando...
+        </p>
+
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[#f5f6fa]">
 
-      {/* sidebar*/}
+      {/* sidebar */}
       <aside
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
@@ -55,120 +97,104 @@ export default function ClienteLayout({
         <nav className="flex flex-col gap-4 mt-10 px-4">
 
           {/* dashboard */}
-          <div className="relative group">
+          <Link
+            href="/dashboard"
+            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
 
-            <Link
-              href="/dashboard"
-              className={`flex items-center gap-4 p-4 rounded-xl transition w-full
+            ${pathname === "/dashboard"
+              ? "bg-purple-100 text-purple-600"
+              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
+            }
+            `}
+          >
 
-              ${pathname === "/dashboard"
-                ? "bg-purple-100 text-purple-600"
-                : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-              }
-              `}
-            >
+            <Home />
 
-              <Home />
+            {open && (
+              <span className="font-medium">
+                Inicio
+              </span>
+            )}
 
-              {open && (
-                <span className="font-medium">
-                  Inicio
-                </span>
-              )}
-
-            </Link>
-
-          </div>
+          </Link>
 
           {/* entrenamientos */}
-          <div className="relative group">
+          <Link
+            href="/entrenamientos"
+            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
 
-            <Link
-              href="/entrenamientos"
-              className={`flex items-center gap-4 p-4 rounded-xl transition w-full
+            ${pathname === "/entrenamientos"
+              ? "bg-purple-100 text-purple-600"
+              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
+            }
+            `}
+          >
 
-              ${pathname === "/entrenamientos"
-                ? "bg-purple-100 text-purple-600"
-                : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-              }
-              `}
-            >
+            <Dumbbell />
 
-              <Calendar />
+            {open && (
+              <span>
+                Entrenamientos
+              </span>
+            )}
 
-              {open && (
-                <span>
-                  Entrenamientos
-                </span>
-              )}
-
-            </Link>
-
-          </div>
+          </Link>
 
           {/* pagos */}
-          <div className="relative group">
+          <Link
+            href="/pagos"
+            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
 
-            <Link
-              href="/pagos"
-              className={`flex items-center gap-4 p-4 rounded-xl transition w-full
+            ${pathname === "/pagos"
+              ? "bg-purple-100 text-purple-600"
+              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
+            }
+            `}
+          >
 
-              ${pathname === "/pagos"
-                ? "bg-purple-100 text-purple-600"
-                : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-              }
-              `}
-            >
+            <CreditCard />
 
-              <CreditCard />
+            {open && (
+              <span>
+                Pagos
+              </span>
+            )}
 
-              {open && (
-                <span>
-                  Pagos
-                </span>
-              )}
-
-            </Link>
-
-          </div>
+          </Link>
 
           {/* perfil */}
-          <div className="relative group">
+          <Link
+            href="/perfil"
+            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
 
-            <Link
-              href="/perfil"
-              className={`flex items-center gap-4 p-4 rounded-xl transition w-full
+            ${pathname === "/perfil"
+              ? "bg-purple-100 text-purple-600"
+              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
+            }
+            `}
+          >
 
-              ${pathname === "/perfil"
-                ? "bg-purple-100 text-purple-600"
-                : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-              }
-              `}
-            >
+            <User />
 
-              <User />
+            {open && (
+              <span>
+                Perfil
+              </span>
+            )}
 
-              {open && (
-                <span>
-                  Perfil
-                </span>
-              )}
-
-            </Link>
-
-          </div>
+          </Link>
 
         </nav>
 
       </aside>
 
-      {/* CONTENIDO */}
+      {/* contenido */}
       <main className="flex-1 p-8">
 
         {/* TOPBAR */}
         <div className="flex justify-between items-center mb-8">
 
-          {/* buscar */}
+          {/* buscar*/}
           <div className="flex items-center bg-white px-4 py-3 rounded-xl shadow w-[350px]">
 
             <Search className="text-gray-400 w-5 h-5" />
@@ -193,11 +219,11 @@ export default function ClienteLayout({
               <div>
 
                 <p className="font-semibold">
-                  Adonis
+                  Cliente
                 </p>
 
                 <p className="text-sm text-gray-400">
-                  Cliente
+                  Usuario
                 </p>
 
               </div>
@@ -208,7 +234,7 @@ export default function ClienteLayout({
 
         </div>
 
-        {/* dinamico */}
+        {/* CONTENIDO */}
         {children}
 
       </main>
