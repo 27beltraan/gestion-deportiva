@@ -11,13 +11,8 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      alert("Las contraseñas no coinciden");
-      return;
-    }
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -34,7 +29,16 @@ export default function Register() {
     if (user) {
       const { error: errorInsert } = await supabase
         .from("usuarios")
-        .insert([{ id: user.id, email, nombre }]);
+        .insert([
+          {
+            id: user.id,
+            email,
+            nombre,
+            rol: "cliente",
+            foto_perfil:
+              "/avatars/avatar1.png",
+          },
+        ]);
 
       if (errorInsert) {
         alert("Error guardando datos");
@@ -58,14 +62,15 @@ export default function Register() {
         <p className="text-gray-500 mb-6">
           Completa tus datos para comenzar
         </p>
-<div className="absolute top-6 left-6">
-  <button
-    onClick={() => router.push("/")}
-    className="bg-gray-100 p-2 rounded-full hover:bg-purple-500 hover:text-white transition"
-  >
-    <ArrowLeft size={20} />
-  </button>
-</div>
+
+        <div className="absolute top-6 left-6">
+          <button
+            onClick={() => router.push("/")}
+            className="bg-gray-100 p-2 rounded-full hover:bg-purple-500 hover:text-white transition"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        </div>
 
         {/* nombre */}
         <input
@@ -76,7 +81,7 @@ export default function Register() {
           onChange={(e) => setNombre(e.target.value)}
         />
 
-        {/* email*/}
+        {/* email */}
         <input
           type="email"
           placeholder="Email"
@@ -85,7 +90,7 @@ export default function Register() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* contrasena */}
+        {/* contraseña */}
         <input
           type="password"
           placeholder="Contraseña"
@@ -93,8 +98,6 @@ export default function Register() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-
-        
 
         {/* boton */}
         <button
@@ -115,7 +118,7 @@ export default function Register() {
         </p>
       </div>
 
-      {/* imagen derecha) */}
+      {/* imagen derecha */}
       <div className="hidden md:block w-1/2 relative">
 
         <img
@@ -129,9 +132,8 @@ export default function Register() {
           <h2 className="text-2xl font-bold">
             Controla tu club de forma inteligente
           </h2>
-        
-          
         </div>
+
       </div>
     </div>
   );

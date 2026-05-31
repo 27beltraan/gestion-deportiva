@@ -100,12 +100,12 @@ export default function AdminLayout({
           </Link>
 
           <Link
-            href="/usuarios-admin"
+            href="/jugadores-admin"
             className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-800 transition"
           >
             <Users size={20} />
-            Usuarios
-          </Link>
+             Registro Jugadores
+            </Link>
 
           <Link
             href="/entrenamientos-admin"
@@ -115,6 +115,18 @@ export default function AdminLayout({
             Entrenamientos
           </Link>
 
+          <Link
+              href="/listado-jugadores"
+              className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-800 transition"
+          >
+              <Users size={20} />
+               Listado Jugadores
+          </Link>
+
+
+
+
+   
         </nav>
 
       </aside>

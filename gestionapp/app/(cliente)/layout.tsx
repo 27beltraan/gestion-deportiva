@@ -1,22 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import Image from "next/image";
 import Link from "next/link";
-
-import { usePathname, useRouter } from "next/navigation";
-
-import { supabase } from "@/lib/supabase";
 
 import {
   Home,
-  Dumbbell,
   CreditCard,
+  Dumbbell,
   User,
-  Bell,
-  Search,
+  LogOut,
 } from "lucide-react";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import { useRouter } from "next/navigation";
+
+import { supabase } from "@/lib/supabase";
+
+interface Usuario {
+
+  nombre: string;
+
+  email: string;
+
+  foto_perfil: string;
+}
 
 export default function ClienteLayout({
   children,
@@ -24,220 +34,307 @@ export default function ClienteLayout({
   children: React.ReactNode;
 }) {
 
-  const [open, setOpen] = useState(false);
+  const router =
+    useRouter();
 
-  const [loading, setLoading] = useState(true);
+  const [usuario,
+    setUsuario] =
+    useState<Usuario | null>(
+      null
+    );
 
-  const pathname = usePathname();
-
-  const router = useRouter();
-
-  // proteger rutas
+  // OBTENER USUARIO
   useEffect(() => {
 
-    const verificarUsuario = async () => {
+    const obtenerUsuario =
+      async () => {
 
-      const { data: authData } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } =
+          await supabase.auth.getUser();
 
-      // no logueado
-      if (!authData.user) {
+        if (!user) return;
 
-        router.push("/login");
+        const { data } =
+          await supabase
+            .from("usuarios")
+            .select("*")
+            .eq(
+              "email",
+              user.email
+            )
+            .single();
 
-        return;
-      }
+        if (data) {
 
-      setLoading(false);
-    };
+          setUsuario(data);
+        }
+      };
 
-    verificarUsuario();
+    obtenerUsuario();
 
   }, []);
 
-  // loading
-  if (loading) {
+  // LOGOUT
+  const cerrarSesion =
+    async () => {
 
-    return (
-      <div className="h-screen flex items-center justify-center">
+      await supabase.auth.signOut();
 
-        <p className="text-xl font-semibold">
-          Cargando...
-        </p>
-
-      </div>
-    );
-  }
+      router.push("/login");
+    };
 
   return (
-    <div className="flex min-h-screen bg-[#f5f6fa]">
+    <div className="
+      flex
+      min-h-screen
+      bg-[#f5f6fa]
+    ">
 
-      {/* sidebar */}
-      <aside
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        className={`bg-white shadow-md transition-all duration-300 flex flex-col
-        ${open ? "w-64" : "w-24"}
-        `}
-      >
+      {/* SIDEBAR */}
+      <aside className="
+        w-24
+        bg-white
+        shadow-lg
+        flex
+        flex-col
+        items-center
+        py-6
+        gap-6
+        transition-all
+      ">
 
-        {/* logo */}
-        <div className="flex items-center justify-center p-6">
+        {/* LOGO */}
+        <div className="
+          mb-8
+        ">
 
-          <Image
+          <img
             src="/logosecundario.png"
-            alt="Logo"
-            width={open ? 120 : 60}
-            height={60}
-            className="object-contain transition-all"
+            alt="logo"
+            className="
+              w-14
+              h-14
+              object-contain
+            "
           />
 
         </div>
 
-        {/* menu */}
-        <nav className="flex flex-col gap-4 mt-10 px-4">
+        {/* MENU */}
+        <nav className="
+          flex
+          flex-col
+          gap-4
+          items-center
+        ">
 
-          {/* dashboard */}
           <Link
             href="/dashboard"
-            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
-
-            ${pathname === "/dashboard"
-              ? "bg-purple-100 text-purple-600"
-              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-            }
-            `}
+            className="
+              p-4
+              rounded-2xl
+              hover:bg-purple-100
+              hover:text-purple-600
+              transition-all
+              duration-300
+            "
           >
-
             <Home />
-
-            {open && (
-              <span className="font-medium">
-                Inicio
-              </span>
-            )}
-
           </Link>
 
-          {/* entrenamientos */}
-          <Link
-            href="/entrenamientos"
-            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
-
-            ${pathname === "/entrenamientos"
-              ? "bg-purple-100 text-purple-600"
-              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-            }
-            `}
-          >
-
-            <Dumbbell />
-
-            {open && (
-              <span>
-                Entrenamientos
-              </span>
-            )}
-
-          </Link>
-
-          {/* pagos */}
           <Link
             href="/pagos"
-            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
-
-            ${pathname === "/pagos"
-              ? "bg-purple-100 text-purple-600"
-              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-            }
-            `}
+            className="
+              p-4
+              rounded-2xl
+              hover:bg-purple-100
+              hover:text-purple-600
+              transition-all
+              duration-300
+            "
           >
-
             <CreditCard />
-
-            {open && (
-              <span>
-                Pagos
-              </span>
-            )}
-
           </Link>
 
-          {/* perfil */}
+          <Link
+            href="/entrenamientos"
+            className="
+              p-4
+              rounded-2xl
+              hover:bg-purple-100
+              hover:text-purple-600
+              transition-all
+              duration-300
+            "
+          >
+            <Dumbbell />
+          </Link>
+
           <Link
             href="/perfil"
-            className={`flex items-center gap-4 p-4 rounded-xl transition w-full
-
-            ${pathname === "/perfil"
-              ? "bg-purple-100 text-purple-600"
-              : "text-gray-500 hover:bg-gray-100 hover:text-purple-600"
-            }
-            `}
+            className="
+              p-4
+              rounded-2xl
+              hover:bg-purple-100
+              hover:text-purple-600
+              transition-all
+              duration-300
+            "
           >
-
             <User />
-
-            {open && (
-              <span>
-                Perfil
-              </span>
-            )}
-
           </Link>
 
         </nav>
 
-      </aside>
+        {/* AVATAR */}
+        <div className="
+          mt-auto
+          flex
+          flex-col
+          items-center
+          gap-3
+        ">
 
-      {/* contenido */}
-      <main className="flex-1 p-8">
+          <div className="
+            w-14
+            h-14
+            rounded-full
+            overflow-hidden
+            border-4
+            border-purple-500
+            shadow-lg
+          ">
 
-        {/* TOPBAR */}
-        <div className="flex justify-between items-center mb-8">
-
-          {/* buscar*/}
-          <div className="flex items-center bg-white px-4 py-3 rounded-xl shadow w-[350px]">
-
-            <Search className="text-gray-400 w-5 h-5" />
-
-            <input
-              type="text"
-              placeholder="Buscar..."
-              className="ml-3 outline-none w-full"
+            <img
+              src={
+                usuario?.foto_perfil ||
+                "/avatars/avatar1.png"
+              }
+              alt="avatar"
+              className="
+                w-full
+                h-full
+                object-cover
+              "
             />
 
           </div>
 
-          {/* perfil */}
-          <div className="flex items-center gap-4">
+          <button
+            onClick={
+              cerrarSesion
+            }
+            className="
+              p-3
+              rounded-xl
+              hover:bg-red-100
+              text-red-500
+              transition-all
+            "
+          >
+            <LogOut size={20} />
+          </button>
 
-            <Bell className="text-gray-500" />
+        </div>
 
-            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow">
+      </aside>
 
-              <div className="w-10 h-10 bg-purple-500 rounded-full"></div>
+      {/* CONTENIDO */}
+      <div className="
+        flex-1
+        flex
+        flex-col
+      ">
 
-              <div>
+        {/* TOPBAR */}
+        <header className="
+          bg-white
+          shadow-sm
+          px-8
+          py-4
+          flex
+          items-center
+          justify-between
+        ">
 
-                <p className="font-semibold">
-                  Cliente
-                </p>
+          <div>
 
-                <p className="text-sm text-gray-400">
-                  Usuario
-                </p>
+            <h1 className="
+              text-2xl
+              font-bold
+            ">
+              Bienvenido 👋
+            </h1>
 
-              </div>
+            <p className="
+              text-gray-500
+            ">
+              Panel del cliente
+            </p>
+
+          </div>
+
+          {/* PERFIL */}
+          <div className="
+            flex
+            items-center
+            gap-4
+          ">
+
+            <div className="
+              text-right
+            ">
+
+              <p className="
+                font-semibold
+              ">
+                {usuario?.nombre}
+              </p>
+
+              <p className="
+                text-sm
+                text-gray-500
+              ">
+                Cliente
+              </p>
+
+            </div>
+
+            <div className="
+              w-12
+              h-12
+              rounded-full
+              overflow-hidden
+              border-4
+              border-purple-500
+            ">
+
+              <img
+                src={
+                  usuario?.foto_perfil ||
+                  "/avatars/avatar1.png"
+                }
+              />
 
             </div>
 
           </div>
 
-        </div>
+        </header>
 
-        {/* CONTENIDO */}
-        {children}
+        {/* PAGE */}
+        <main className="
+          flex-1
+          p-8
+        ">
 
-      </main>
+          {children}
+
+        </main>
+
+      </div>
 
     </div>
   );

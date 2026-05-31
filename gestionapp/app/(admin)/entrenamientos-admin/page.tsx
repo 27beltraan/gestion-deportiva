@@ -5,290 +5,539 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 import {
-  MoreVertical,
-  Pencil,
+  Dumbbell,
+  Calendar,
+  Clock,
   Trash2,
 } from "lucide-react";
 
 interface Entrenamiento {
-  id: number;
-  titulo: string;
-  descripcion: string;
+
+  id: string;
+
+  tipo: string;
+
+  categoria: string;
+
   fecha: string;
+
   hora: string;
+
+  duracion: string;
 }
 
 export default function EntrenamientosAdmin() {
 
-  const [titulo, setTitulo] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [fecha, setFecha] = useState("");
-  const [hora, setHora] = useState("");
+  const [tipo,
+    setTipo] =
+    useState("");
 
-  const [entrenamientos, setEntrenamientos] = useState<Entrenamiento[]>([]);
+  const [categoria,
+    setCategoria] =
+    useState("");
 
-  const [menuAbierto, setMenuAbierto] = useState<number | null>(null);
+  const [fecha,
+    setFecha] =
+    useState("");
 
-  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [hora,
+    setHora] =
+    useState("");
 
-  // obtener entrenamientos
-  const obtenerEntrenamientos = async () => {
+  const [duracion,
+    setDuracion] =
+    useState("");
 
-    const { data, error } = await supabase
-      .from("entrenamientos")
-      .select("*")
-      .order("id", { ascending: false });
+  const [entrenamientos,
+    setEntrenamientos] =
+    useState<Entrenamiento[]>([]);
 
-    if (error) {
-      console.log(error);
-      return;
-    }
+  // OBTENER
+  const obtenerEntrenamientos =
+    async () => {
 
-    setEntrenamientos(data);
-  };
+      const { data } =
+        await supabase
+          .from("entrenamientos")
+          .select("*")
+          .order(
+            "fecha",
+            { ascending: true }
+          );
 
-  // crear entrenamiento
-  const crearEntrenamiento = async () => {
+      setEntrenamientos(
+        data || []
+      );
+    };
 
-    const { error } = await supabase
-      .from("entrenamientos")
-      .insert([
-        {
-          titulo,
-          descripcion,
-          fecha,
-          hora,
-        },
-      ]);
+  // CREAR
+  const crearEntrenamiento =
+    async () => {
 
-    if (error) {
-      console.log(error);
-      alert("Error creando entrenamiento");
-      return;
-    }
+      if (
+        !tipo ||
+        !categoria ||
+        !fecha ||
+        !hora ||
+        !duracion
+      ) {
 
-    alert("Entrenamiento creado");
+        alert(
+          "Completa todos los campos"
+        );
 
-    setTitulo("");
-    setDescripcion("");
-    setFecha("");
-    setHora("");
+        return;
+      }
 
-    obtenerEntrenamientos();
-  };
+      const { error } =
+        await supabase
+          .from("entrenamientos")
+          .insert([
+            {
+              tipo,
+              categoria,
+              fecha,
+              hora,
+              duracion,
+            },
+          ]);
 
-  // eliminar entrenamiento
-  const eliminarEntrenamiento = async (id: number) => {
+      if (error) {
 
-    const confirmar = confirm(
-      "¿Eliminar entrenamiento?"
-    );
+        console.log(error);
 
-    if (!confirmar) return;
+        alert(
+          "Error creando entrenamiento"
+        );
 
-    const { error } = await supabase
-      .from("entrenamientos")
-      .delete()
-      .eq("id", id);
+        return;
+      }
 
-    if (error) {
-      console.log(error);
-      return;
-    }
+      alert(
+        "Entrenamiento creado"
+      );
 
-    obtenerEntrenamientos();
-  };
+      // LIMPIAR
+      setTipo("");
+      setCategoria("");
+      setFecha("");
+      setHora("");
+      setDuracion("");
 
-  // editar entrenamiento
-  const editarEntrenamiento = async (id: number) => {
+      obtenerEntrenamientos();
+    };
 
-    const { error } = await supabase
-      .from("entrenamientos")
-      .update({
-        titulo,
-        descripcion,
-        fecha,
-        hora,
-      })
-      .eq("id", id);
+  // ELIMINAR
+  const eliminarEntrenamiento =
+    async (id: string) => {
 
-    if (error) {
-      console.log(error);
-      return;
-    }
+      await supabase
+        .from("entrenamientos")
+        .delete()
+        .eq("id", id);
 
-    alert("Entrenamiento actualizado");
+      obtenerEntrenamientos();
+    };
 
-    setEditandoId(null);
+  // COLOR
+  const obtenerColor =
+    (tipo: string) => {
 
-    setTitulo("");
-    setDescripcion("");
-    setFecha("");
-    setHora("");
+      switch (tipo) {
 
-    obtenerEntrenamientos();
-  };
+        case "Físico":
+          return "bg-green-500";
 
-  // cargar datos para editar
-  const cargarEdicion = (
-    entrenamiento: Entrenamiento
-  ) => {
+        case "Táctico":
+          return "bg-blue-500";
 
-    setTitulo(entrenamiento.titulo);
-    setDescripcion(entrenamiento.descripcion);
-    setFecha(entrenamiento.fecha);
-    setHora(entrenamiento.hora);
+        case "Recuperación":
+          return "bg-yellow-500";
 
-    setEditandoId(entrenamiento.id);
-  };
+        case "Partido":
+          return "bg-red-500";
+
+        default:
+          return "bg-purple-500";
+      }
+    };
 
   useEffect(() => {
+
     obtenerEntrenamientos();
+
   }, []);
 
   return (
-    <div>
+    <div className="
+      min-h-screen
+      bg-[#f5f6fa]
+      p-8
+    ">
 
-      <h1 className="text-4xl font-bold mb-8">
-        Entrenamientos 🏋️
-      </h1>
+      {/* HEADER */}
+      <div className="
+        mb-10
+      ">
 
-      {/* formulario */}
-      <div className="bg-white p-8 rounded-2xl shadow mb-10">
+        <h1 className="
+          text-4xl
+          font-bold
+        ">
+          Entrenamientos ⚽
+        </h1>
 
-        <div className="grid grid-cols-2 gap-6">
+        <p className="
+          text-gray-500
+          mt-2
+        ">
+          Gestión de entrenamientos
+        </p>
 
+      </div>
+
+      {/* FORM */}
+      <div className="
+        bg-white
+        rounded-3xl
+        shadow
+        p-8
+        mb-10
+      ">
+
+        <div className="
+          grid
+          grid-cols-1
+          md:grid-cols-2
+          lg:grid-cols-5
+          gap-6
+        ">
+
+          {/* TIPO */}
+          <select
+            value={tipo}
+            onChange={(e) =>
+              setTipo(
+                e.target.value
+              )
+            }
+            className="
+              border
+              rounded-2xl
+              p-4
+              outline-none
+              focus:ring-2
+              focus:ring-purple-500
+            "
+          >
+
+            <option value="">
+              Tipo
+            </option>
+
+            <option>
+              Físico
+            </option>
+
+            <option>
+              Táctico
+            </option>
+
+            <option>
+              Recuperación
+            </option>
+
+            <option>
+              Partido
+            </option>
+
+          </select>
+
+          {/* CATEGORIA */}
+          <select
+            value={categoria}
+            onChange={(e) =>
+              setCategoria(
+                e.target.value
+              )
+            }
+            className="
+              border
+              rounded-2xl
+              p-4
+              outline-none
+              focus:ring-2
+              focus:ring-purple-500
+            "
+          >
+
+            <option value="">
+              Categoría
+            </option>
+
+            <option>
+              Infantil
+            </option>
+
+            <option>
+              Juvenil
+            </option>
+
+            <option>
+              Adulto
+            </option>
+
+          </select>
+
+          {/* FECHA */}
           <input
-            type="text"
-            placeholder="Título"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            className="border rounded-xl p-4"
-          />
-
-          <input
-            type="text"
-            placeholder="Fecha"
+            type="date"
             value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            className="border rounded-xl p-4"
+            onChange={(e) =>
+              setFecha(
+                e.target.value
+              )
+            }
+            className="
+              border
+              rounded-2xl
+              p-4
+              outline-none
+              focus:ring-2
+              focus:ring-purple-500
+            "
           />
 
+          {/* HORA */}
+          <input
+            type="time"
+            value={hora}
+            onChange={(e) =>
+              setHora(
+                e.target.value
+              )
+            }
+            className="
+              border
+              rounded-2xl
+              p-4
+              outline-none
+              focus:ring-2
+              focus:ring-purple-500
+            "
+          />
+
+          {/* DURACION */}
           <input
             type="text"
-            placeholder="Hora"
-            value={hora}
-            onChange={(e) => setHora(e.target.value)}
-            className="border rounded-xl p-4"
+            value={duracion}
+            onChange={(e) =>
+              setDuracion(
+                e.target.value
+              )
+            }
+            placeholder="90 min"
+            className="
+              border
+              rounded-2xl
+              p-4
+              outline-none
+              focus:ring-2
+              focus:ring-purple-500
+            "
           />
 
         </div>
 
-        <textarea
-          placeholder="Descripción"
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          className="border rounded-xl p-4 w-full mt-6 h-32"
-        />
-
+        {/* BOTON */}
         <button
-          onClick={() => {
-
-            if (editandoId) {
-
-              editarEntrenamiento(editandoId);
-
-            } else {
-
-              crearEntrenamiento();
-
-            }
-          }}
-          className="mt-6 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl"
+          onClick={
+            crearEntrenamiento
+          }
+          className="
+            mt-8
+            bg-gradient-to-r
+            from-purple-500
+            to-purple-700
+            text-white
+            px-8
+            py-4
+            rounded-2xl
+            font-semibold
+            hover:opacity-90
+            transition-all
+          "
         >
-          {editandoId
-            ? "Guardar cambios"
-            : "Crear entrenamiento"}
+          Crear Entrenamiento
         </button>
 
       </div>
 
-      {/* lista */}
-      <div className="grid gap-6">
+      {/* GRID */}
+      <div className="
+        grid
+        grid-cols-1
+        md:grid-cols-2
+        xl:grid-cols-3
+        gap-6
+      ">
 
-        {entrenamientos.map((entrenamiento) => (
+        {entrenamientos.map(
+          (entrenamiento) => (
 
           <div
             key={entrenamiento.id}
-            className="bg-white p-6 rounded-2xl shadow relative"
+            className="
+              bg-white
+              rounded-3xl
+              shadow
+              overflow-hidden
+              hover:shadow-xl
+              transition-all
+            "
           >
 
-            {/* menu */}
-            <div className="absolute top-6 right-6">
+            {/* TOP */}
+            <div className={`
+              ${obtenerColor(
+                entrenamiento.tipo
+              )}
 
-              <button
-                onClick={() =>
-                  setMenuAbierto(
-                    menuAbierto === entrenamiento.id
-                      ? null
-                      : entrenamiento.id
-                  )
-                }
-              >
-                <MoreVertical />
-              </button>
+              p-6
+              text-white
+            `}>
 
-              {menuAbierto === entrenamiento.id && (
+              <div className="
+                flex
+                items-center
+                justify-between
+              ">
 
-                <div className="absolute right-0 mt-2 bg-white border rounded-xl shadow-lg w-44 z-50">
+                <div>
 
-                  <button
-                    onClick={() => {
-                      cargarEdicion(entrenamiento);
-                      setMenuAbierto(null);
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-3 hover:bg-gray-100"
-                  >
-                    <Pencil size={18} />
-                    Editar
-                  </button>
+                  <h2 className="
+                    text-2xl
+                    font-bold
+                  ">
+                    {
+                      entrenamiento.tipo
+                    }
+                  </h2>
 
-                  <button
-                    onClick={() => {
-                      eliminarEntrenamiento(
-                        entrenamiento.id
-                      );
-                      setMenuAbierto(null);
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-3 hover:bg-gray-100 text-red-500"
-                  >
-                    <Trash2 size={18} />
-                    Eliminar
-                  </button>
+                  <p className="
+                    opacity-90
+                  ">
+                    {
+                      entrenamiento.categoria
+                    }
+                  </p>
 
                 </div>
 
-              )}
+                <Dumbbell size={32} />
+
+              </div>
 
             </div>
 
-            <h2 className="text-2xl font-bold mb-2">
-              {entrenamiento.titulo}
-            </h2>
+            {/* BODY */}
+            <div className="
+              p-6
+              space-y-4
+            ">
 
-            <p className="text-gray-500 mb-4">
-              {entrenamiento.descripcion}
-            </p>
+              <div className="
+                flex
+                items-center
+                gap-3
+              ">
 
-            <div className="flex gap-6 text-sm text-gray-400">
+                <Calendar
+                  className="
+                    text-purple-500
+                  "
+                />
 
-              <span>
-                📅 {entrenamiento.fecha}
-              </span>
+                <span>
+                  {
+                    entrenamiento.fecha
+                  }
+                </span>
 
-              <span>
-                ⏰ {entrenamiento.hora}
-              </span>
+              </div>
+
+              <div className="
+                flex
+                items-center
+                gap-3
+              ">
+
+                <Clock
+                  className="
+                    text-purple-500
+                  "
+                />
+
+                <span>
+                  {
+                    entrenamiento.hora
+                  }
+                </span>
+
+              </div>
+
+              <div className="
+                bg-gray-100
+                rounded-2xl
+                p-4
+              ">
+
+                <p className="
+                  text-sm
+                  text-gray-500
+                ">
+                  Duración
+                </p>
+
+                <h3 className="
+                  text-xl
+                  font-bold
+                ">
+                  {
+                    entrenamiento.duracion
+                  }
+                </h3>
+
+              </div>
+
+              {/* BOTON */}
+              <button
+                onClick={() =>
+                  eliminarEntrenamiento(
+                    entrenamiento.id
+                  )
+                }
+                className="
+                  w-full
+                  mt-4
+                  bg-red-500
+                  hover:bg-red-600
+                  text-white
+                  py-3
+                  rounded-2xl
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  transition-all
+                "
+              >
+
+                <Trash2 size={18} />
+
+                Eliminar
+
+              </button>
 
             </div>
 
