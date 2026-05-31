@@ -13,6 +13,7 @@ import {
   CreditCard,
   Users,
   Dumbbell,
+  FileText,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -123,7 +124,13 @@ export default function AdminLayout({
                Listado Jugadores
           </Link>
 
-
+          <Link
+              href="/certificados-admin"
+              className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-800 transition"
+          >
+              <FileText size={20} />
+               Certificados
+          </Link>
 
 
    

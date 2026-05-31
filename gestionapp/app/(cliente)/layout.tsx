@@ -8,12 +8,14 @@ import {
   Dumbbell,
   User,
   LogOut,
+  FileText,
 } from "lucide-react";
 
 import {
   useEffect,
   useState,
 } from "react";
+
 
 import { useRouter } from "next/navigation";
 
@@ -171,6 +173,21 @@ export default function ClienteLayout({
           >
             <Dumbbell />
           </Link>
+
+
+          <Link
+            href="/certificados"
+            className="
+            rounded-2xl
+              hover:bg-purple-100
+              hover:text-purple-600
+              transition-all
+              duration-300
+            "  
+          >
+           <FileText/>
+          </Link>
+
 
           <Link
             href="/perfil"
