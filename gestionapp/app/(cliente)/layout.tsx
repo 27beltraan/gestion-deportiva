@@ -16,7 +16,6 @@ import {
   useState,
 } from "react";
 
-
 import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
@@ -94,8 +93,12 @@ export default function ClienteLayout({
       bg-[#f5f6fa]
     ">
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR FIJA */}
       <aside className="
+        fixed
+        left-0
+        top-0
+        h-screen
         w-24
         bg-white
         shadow-lg
@@ -104,7 +107,7 @@ export default function ClienteLayout({
         items-center
         py-6
         gap-6
-        transition-all
+        z-50
       ">
 
         {/* LOGO */}
@@ -174,20 +177,19 @@ export default function ClienteLayout({
             <Dumbbell />
           </Link>
 
-
           <Link
             href="/certificados"
             className="
-            rounded-2xl
+              p-4
+              rounded-2xl
               hover:bg-purple-100
               hover:text-purple-600
               transition-all
               duration-300
-            "  
+            "
           >
-           <FileText/>
+            <FileText />
           </Link>
-
 
           <Link
             href="/perfil"
@@ -261,85 +263,10 @@ export default function ClienteLayout({
       {/* CONTENIDO */}
       <div className="
         flex-1
+        ml-24
         flex
         flex-col
       ">
-
-        {/* TOPBAR */}
-        <header className="
-          bg-white
-          shadow-sm
-          px-8
-          py-4
-          flex
-          items-center
-          justify-between
-        ">
-
-          <div>
-
-            <h1 className="
-              text-2xl
-              font-bold
-            ">
-              Bienvenido 👋
-            </h1>
-
-            <p className="
-              text-gray-500
-            ">
-              Panel del cliente
-            </p>
-
-          </div>
-
-          {/* PERFIL */}
-          <div className="
-            flex
-            items-center
-            gap-4
-          ">
-
-            <div className="
-              text-right
-            ">
-
-              <p className="
-                font-semibold
-              ">
-                {usuario?.nombre}
-              </p>
-
-              <p className="
-                text-sm
-                text-gray-500
-              ">
-                Cliente
-              </p>
-
-            </div>
-
-            <div className="
-              w-12
-              h-12
-              rounded-full
-              overflow-hidden
-              border-4
-              border-purple-500
-            ">
-
-              <img
-                src={
-                  usuario?.foto_perfil ||
-                  "/avatars/avatar1.png"
-                }
-              />
-
-            </div>
-
-          </div>
-
-        </header>
 
         {/* PAGE */}
         <main className="

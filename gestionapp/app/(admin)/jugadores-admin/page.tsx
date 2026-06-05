@@ -10,8 +10,16 @@ export default function JugadoresAdmin() {
     setNombre] =
     useState("");
 
+  const [apellido,
+    setApellido] =
+    useState("");
+
   const [correo,
     setCorreo] =
+    useState("");
+
+  const [password,
+    setPassword] =
     useState("");
 
   const [telefono,
@@ -40,23 +48,63 @@ export default function JugadoresAdmin() {
 
       setLoading(true);
 
+      // CREAR USUARIO AUTH
+      const {
+        data: authData,
+        error: authError,
+      } =
+        await supabase.auth.signUp({
+
+          email: correo,
+
+          password,
+
+        });
+
+      if (authError) {
+
+        setLoading(false);
+
+        alert(
+          authError.message
+        );
+
+        return;
+      }
+
+      const user =
+        authData.user;
+
+      // INSERTAR JUGADOR
       const { error } =
         await supabase
           .from("jugadores")
           .insert([
             {
-              nombre,
+
+              user_id:
+                user?.id,
+
+              nombre:
+                `${nombre} ${apellido}`,
+
               correo,
+
               telefono,
+
               categoria,
+
               mensualidad:
                 Number(
                   mensualidad
                 ),
+
               dia_pago:
                 diaPago,
+
               avatar:
                 "/avatars/avatar1.png",
+
             },
           ]);
 
@@ -74,12 +122,14 @@ export default function JugadoresAdmin() {
       }
 
       alert(
-        "Jugador registrado correctamente"
+        "Jugador registrado correctamente 😎"
       );
 
       // LIMPIAR
       setNombre("");
+      setApellido("");
       setCorreo("");
+      setPassword("");
       setTelefono("");
       setCategoria("");
       setMensualidad("");
@@ -172,6 +222,39 @@ export default function JugadoresAdmin() {
 
             </div>
 
+            {/* APELLIDO */}
+            <div>
+
+              <label className="
+                block
+                mb-2
+                font-medium
+              ">
+                Apellido
+              </label>
+
+              <input
+                type="text"
+                value={apellido}
+                onChange={(e) =>
+                  setApellido(
+                    e.target.value
+                  )
+                }
+                placeholder="Apellido jugador"
+                className="
+                  w-full
+                  border
+                  rounded-2xl
+                  p-4
+                  outline-none
+                  focus:ring-2
+                  focus:ring-purple-500
+                "
+              />
+
+            </div>
+
             {/* CORREO */}
             <div>
 
@@ -192,6 +275,39 @@ export default function JugadoresAdmin() {
                   )
                 }
                 placeholder="correo@gmail.com"
+                className="
+                  w-full
+                  border
+                  rounded-2xl
+                  p-4
+                  outline-none
+                  focus:ring-2
+                  focus:ring-purple-500
+                "
+              />
+
+            </div>
+
+            {/* PASSWORD */}
+            <div>
+
+              <label className="
+                block
+                mb-2
+                font-medium
+              ">
+                Contraseña
+              </label>
+
+              <input
+                type="password"
+                value={password}
+                onChange={(e) =>
+                  setPassword(
+                    e.target.value
+                  )
+                }
+                placeholder="********"
                 className="
                   w-full
                   border
@@ -416,7 +532,9 @@ export default function JugadoresAdmin() {
           ">
 
             {
-              nombre || "Jugador"
+              nombre || apellido
+                ? `${nombre} ${apellido}`
+                : "Jugador"
             }
 
           </h2>
@@ -432,70 +550,6 @@ export default function JugadoresAdmin() {
             }
 
           </p>
-
-          <div className="
-            mt-6
-            w-full
-            space-y-4
-          ">
-
-            <div className="
-              bg-gray-100
-              rounded-2xl
-              p-4
-            ">
-
-              <p className="
-                text-sm
-                text-gray-500
-              ">
-                Mensualidad
-              </p>
-
-              <h3 className="
-                text-xl
-                font-bold
-                text-green-600
-              ">
-
-                {
-                  mensualidad
-                    ? `$${mensualidad}`
-                    : "$0"
-                }
-
-              </h3>
-
-            </div>
-
-            <div className="
-              bg-gray-100
-              rounded-2xl
-              p-4
-            ">
-
-              <p className="
-                text-sm
-                text-gray-500
-              ">
-                Día Pago
-              </p>
-
-              <h3 className="
-                text-xl
-                font-bold
-              ">
-
-                {
-                  diaPago ||
-                  "--"
-                }
-
-              </h3>
-
-            </div>
-
-          </div>
 
         </div>
 
