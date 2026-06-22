@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 
 import jsPDF from "jspdf";
 
+
 import {
   FileText,
   Search,
@@ -60,7 +61,7 @@ export default function CertificadosAdmin() {
     };
 
 
-  // GENERAR PDF
+  // GENERAR  DOCUMENTO PDF
   const generarPDF =
     async (
       certificado: Certificado
@@ -71,60 +72,107 @@ export default function CertificadosAdmin() {
         const doc =
           new jsPDF();
 
-        // TITULO
-        doc.setFontSize(24);
+        // MARCO DEL DOCUMENTO
+        doc.setDrawColor(80, 0, 120);
+        doc.setLineWidth(1);
+        doc.rect(10,10,190,277);
 
+        // TITULO CLUB
+        doc.setFontSize(18);
+        doc.setTextColor(80,0,120);
         doc.text(
-          "CERTIFICADO",
-          70,
-          30
+        "CLUB DEPORTIVO FUTBOLEROS",
+        35,
+        30
+        );
+
+        // TITULO
+        doc.setFontSize(28);
+        doc.text(
+        "CERTIFICADO",
+        65,
+        50
+        );
+
+        // TEXTO
+        doc.setFontSize(14);
+        doc.setTextColor(0,0,0);
+        doc.text(
+        "Se certifica que:",
+        20,
+        90
+        );
+
+        // NOMBRE
+        doc.setFontSize(24);
+        doc.setTextColor(30,30,30);
+        doc.text(
+        certificado.nombre,
+        20,
+        110
         );
 
         // CONTENIDO
         doc.setFontSize(14);
-
         doc.text(
-          "Se certifica que:",
-          20,
-          60
+        `Participa activamente en el Club Deportivo Futboleros y ha 
+        solicitado un certificado de tipo ${certificado.tipo}.`,
+        20,
+        135,
+        {
+        maxWidth:170
+        }
         );
 
-        doc.setFontSize(20);
-
+        // FECHA
         doc.text(
-          certificado.nombre,
-          20,
-          80
+        `Fecha emisión: ${new Date().toLocaleDateString()}`,
+        20,
+        180
         );
 
-        doc.setFontSize(14);
-
+        // CODIGO
         doc.text(
-          "Ha solicitado el certificado de tipo:",
-          20,
-          110
+        `Código: CERT-${certificado.id}`,
+        20,
+        195
         );
 
-        doc.setFontSize(18);
+        // LINEAS FIRMAS
+        doc.line(
+        30,
+        240,
+        80,
+        240
+        );
 
-        doc.text(
-          certificado.tipo,
-          20,
-          130
+        doc.line(
+        120,
+        240,
+        170,
+        240
         );
 
         doc.setFontSize(12);
-
         doc.text(
-          `Fecha solicitud: ${certificado.fecha_solicitud}`,
-          20,
-          170
+        "Director Deportivo",
+        35,
+        248
         );
 
         doc.text(
-          "Club Deportivo",
-          20,
-          190
+        "Gerente General",
+        128,
+        248
+        );
+
+        // PIE
+        doc.setFontSize(10);
+        doc.setTextColor(120);
+        doc.text(
+        "Club Deportivo Futboleros - Documento Oficial",
+        45,
+        270
         );
 
         // PDF BLOB
@@ -229,7 +277,6 @@ export default function CertificadosAdmin() {
 
   
   // CAMBIAR ESTADO
-
   const cambiarEstado =
     async (
       id: string,
@@ -240,7 +287,6 @@ export default function CertificadosAdmin() {
         .from("certificados")
         .update({ estado })
         .eq("id", id);
-
       obtenerCertificados();
     };
 
@@ -251,7 +297,6 @@ export default function CertificadosAdmin() {
   }, []);
 
   // FILTRO
-
   const certificadosFiltrados =
     certificados.filter(
       (c) =>
@@ -264,7 +309,6 @@ export default function CertificadosAdmin() {
 
  
   // STATS
- 
   const pendientes =
     certificados.filter(
       (c) =>
