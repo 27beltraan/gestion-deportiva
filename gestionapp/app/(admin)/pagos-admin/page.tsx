@@ -23,13 +23,13 @@ interface Mensualidad {
 
   jugadores: {
 
-    nombre_jugador: string;
+  nombre_jugador: string;
 
-    apellido_jugador: string;
+  apellido_jugador: string;
 
-    categoria: string;
+  categoria: string;
 
-  };
+}[];
 
 }
 
@@ -106,7 +106,7 @@ export default function PagosAdmin() {
       return;
 
     }
-
+    console.log(data);
     setMensualidades(data || []);
 
     const total =
@@ -313,8 +313,8 @@ export default function PagosAdmin() {
   const mensualidadesFiltradas = mensualidades.filter((m) => {
 
     const nombreCompleto =
-      `${m.jugadores?.nombre_jugador || ""} ${m.jugadores?.apellido_jugador || ""}`
-        .toLowerCase();
+  `${m.jugadores?.[0]?.nombre_jugador || ""} ${m.jugadores?.[0]?.apellido_jugador || ""}`
+    .toLowerCase();
 
     const coincideBusqueda =
       nombreCompleto.includes(busqueda.toLowerCase());
@@ -327,7 +327,7 @@ export default function PagosAdmin() {
     const coincideCategoria =
       categoriaFiltro === ""
         ? true
-        : m.jugadores?.categoria === categoriaFiltro;
+        : m.jugadores?.[0]?.categoria === categoriaFiltro;
 
     return (
       coincideBusqueda &&
@@ -559,14 +559,14 @@ export default function PagosAdmin() {
 
                   <td className="p-4 font-medium">
 
-                    {pago.jugadores?.nombre_jugador}{" "}
-                    {pago.jugadores?.apellido_jugador}
+                    {pago.jugadores?.[0]?.nombre_jugador}{" "}
+                    {pago.jugadores?.[0]?.apellido_jugador}
 
                   </td>
 
                   <td className="p-4">
 
-                    {pago.jugadores?.categoria}
+                    {pago.jugadores?.[0]?.categoria}
 
                   </td>
 
