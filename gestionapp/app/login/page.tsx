@@ -19,41 +19,46 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+const handleLogin = async () => {
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  // 1. Iniciar sesión con Supabase Auth
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    if (error) {
-      alert("Correo o contraseña incorrectos");
-      return;
-    }
+  if (error) {
+    alert("Correo o contraseña incorrectos");
+    return;
+  }
 
-    // buscar usuario en tabla usuarios
-    const { data: usuario, error: usuarioError } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("email", email)
-      .single();
+  // 2. Buscar si es administrador
+  const { data: admin } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("email", email)
+    .single();
 
-    if (usuarioError) {
-      alert("No se encontró el usuario");
-      return;
-    }
+  if (admin) {
+    router.push("/dashboard-admin");
+    return;
+  }
 
-    // verificar rol
-    if (usuario?.rol === "admin") {
+  // 3. Buscar si es jugador
+  const { data: jugador } = await supabase
+    .from("jugadores")
+    .select("*")
+    .eq("correo", email)
+    .single();
 
-      router.push("/dashboard-admin");
+  if (jugador) {
+    router.push("/dashboard");
+    return;
+  }
 
-    } else {
-
-      router.push("/dashboard");
-
-    }
-  };
+  // 4. No existe en ninguna tabla
+  alert("No se encontró el usuario.");
+};
 
   return (
     <div className="flex min-h-screen">

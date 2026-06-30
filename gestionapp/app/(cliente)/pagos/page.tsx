@@ -7,318 +7,378 @@ import { supabase } from "@/lib/supabase";
 import {
   Calendar,
   CheckCircle,
-  AlertTriangle,
   XCircle,
-  Download,
+  AlertTriangle,
+  Upload
 } from "lucide-react";
 
-interface Pago {
+interface Mensualidad {
 
-  id: string;
+  id:number;
 
-  mes: string;
+  mes:string;
 
-  monto: number;
+  anio:number;
 
-  estado: string;
+  monto:number;
 
-  fecha_pago: string;
+  estado:string;
 
-  metodo_pago: string;
+  fecha_pago:string | null;
+
+  comprobante:string | null;
+
 }
 
-export default function PagosCliente() {
+export default function PagosCliente(){
 
-  const [pagos,
-    setPagos] =
-    useState<Pago[]>([]);
+  const [mensualidades,
+  setMensualidades]=
+  useState<Mensualidad[]>([]);
 
   const [totalPagado,
-    setTotalPagado] =
-    useState(0);
+  setTotalPagado]=
+  useState(0);
 
   const [proximoPago,
-    setProximoPago] =
-    useState("");
+  setProximoPago]=
+  useState("");
 
-  // OBTENER PAGOS
-  const obtenerPagos =
-    async () => {
+  useEffect(()=>{
 
-      const {
-        data: { user },
-      } =
-        await supabase.auth.getUser();
+    cargarMensualidades();
 
-      if (!user) return;
+  },[]);
+    const cargarMensualidades = async () => {
 
-      const { data } =
-        await supabase
-          .from("pagos")
-          .select("*")
-          .eq(
-            "correo",
-            user.email
-          )
-          .order(
-            "fecha_pago",
-            { ascending: false }
-          );
+    // Obtener usuario autenticado
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      setPagos(data || []);
+    if (!user) return;
 
-      // TOTAL
-      const total =
-        data?.reduce(
-          (acc, pago) =>
-            acc + pago.monto,
-          0
-        ) || 0;
+    // Buscar el jugador asociado al usuario
+    const { data: jugador, error: jugadorError } = await supabase
 
-      setTotalPagado(total);
+      .from("jugadores")
 
-      // PROXIMO
-      const pendiente =
-        data?.find(
-          (p) =>
-            p.estado ===
-            "Pendiente"
-        );
+      .select("id")
 
-      if (pendiente) {
+      .eq("auth_id", user.id)
 
-        setProximoPago(
-          pendiente.fecha_pago
-        );
-      }
+      .single();
+
+    if (jugadorError) {
+
+      console.error(jugadorError);
+
+      return;
+
+    }
+
+    // Obtener las mensualidades del jugador
+    const { data, error } = await supabase
+
+      .from("mensualidades")
+
+      .select("*")
+
+      .eq("jugador_id", jugador.id)
+
+      .order("anio", { ascending: false })
+
+      .order("id", { ascending: false });
+
+    if (error) {
+
+      console.error(error);
+
+      return;
+
+    }
+
+    setMensualidades(data || []);
+
+    // Total pagado
+    const total = (data || [])
+
+      .filter((m) => m.estado === "Pagado")
+
+      .reduce((acc, m) => acc + m.monto, 0);
+
+    setTotalPagado(total);
+
+    // Próxima deuda pendiente
+    const pendiente = (data || []).find(
+      (m) => m.estado === "Pendiente"
+    );
+
+    if (pendiente) {
+
+      setProximoPago(
+        `${pendiente.mes} ${pendiente.anio}`
+      );
+
+    } else {
+
+      setProximoPago("Sin deudas");
+
     };
 
-  useEffect(() => {
+  };
 
-    obtenerPagos();
 
-  }, []);
 
-  // ESTADO GENERAL
-  const obtenerEstadoGeneral =
-    () => {
+  const obtenerEstadoGeneral = () => {
 
-      const pendiente =
-        pagos.find(
-          (p) =>
-            p.estado ===
-            "Pendiente"
-        );
+    const pendiente = mensualidades.find(
+      (m) => m.estado === "Pendiente"
+    );
 
-      if (pendiente) {
-
-        return {
-          texto:
-            "Pago pendiente",
-          color:
-            "bg-red-500",
-          icon:
-            <XCircle size={28} />,
-        };
-      }
+    if (pendiente) {
 
       return {
-        texto: "Al día",
-        color:
-          "bg-green-500",
-        icon:
-          <CheckCircle size={28} />,
+
+        texto: "Pago pendiente",
+
+        color: "bg-red-500",
+
+        icon: <XCircle size={28} />,
+
       };
+
+    }
+
+    return {
+
+      texto: "Al día",
+
+      color: "bg-green-500",
+
+      icon: <CheckCircle size={28} />,
+
     };
 
-  const estado =
-    obtenerEstadoGeneral();
+  };
 
+
+
+  const estado = obtenerEstadoGeneral();
+    const subirComprobante = async (
+    id: number,
+    archivo: File
+  ) => {
+
+    if (!archivo) return;
+
+    const extension =
+      archivo.name.split(".").pop();
+
+    const nombreArchivo =
+      `${id}-${Date.now()}.${extension}`;
+
+    const { error: storageError } =
+      await supabase.storage
+
+        .from("comprobantes")
+
+        .upload(
+          nombreArchivo,
+          archivo
+        );
+
+    if (storageError) {
+
+      alert(storageError.message);
+
+      return;
+
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage
+
+      .from("comprobantes")
+
+      .getPublicUrl(nombreArchivo);
+
+    const { error } = await supabase
+
+      .from("mensualidades")
+
+      .update({
+
+        comprobante: publicUrl,
+
+        estado: "En revisión",
+
+      })
+
+      .eq("id", id);
+
+    if (error) {
+
+      alert(error.message);
+
+      return;
+
+    }
+
+    await cargarMensualidades();
+
+    alert(
+      "Comprobante enviado correctamente."
+    );
+
+  };
   return (
-    <div className="
-      min-h-screen
-      bg-[#f5f6fa]
-      p-8
-    ">
 
-      {/* HEADER */}
-      <div className="
-        mb-10
-      ">
+  <div className="min-h-screen bg-[#f5f6fa] p-8">
 
-        <h1 className="
-          text-4xl
-          font-bold
-        ">
-          Mis Pagos 💳
-        </h1>
+    {/* HEADER */}
 
-        <p className="
-          text-gray-500
-          mt-2
-        ">
-          Revisa tu estado financiero
+    <div className="mb-10">
+
+      <h1 className="text-4xl font-bold">
+        Mis Pagos 💳
+      </h1>
+
+      <p className="text-gray-500 mt-2">
+        Revisa el estado de tus mensualidades
+      </p>
+
+    </div>
+
+    {/* TARJETAS */}
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+
+      {/* ESTADO */}
+
+      <div
+        className={`
+          ${estado.color}
+          rounded-3xl
+          shadow
+          p-8
+          text-white
+        `}
+      >
+
+        <div className="flex items-center justify-between">
+
+          <div>
+
+            <p className="opacity-90">
+              Estado actual
+            </p>
+
+            <h2 className="text-3xl font-bold mt-2">
+              {estado.texto}
+            </h2>
+
+          </div>
+
+          {estado.icon}
+
+        </div>
+
+      </div>
+
+      {/* PRÓXIMO PAGO */}
+
+      <div className="bg-white rounded-3xl shadow p-8">
+
+        <div className="flex items-center gap-3 mb-4">
+
+          <Calendar className="text-purple-600" />
+
+          <h2 className="text-xl font-bold">
+
+            Próxima mensualidad
+
+          </h2>
+
+        </div>
+
+        <p className="text-3xl font-bold">
+
+          {proximoPago}
+
         </p>
 
       </div>
 
-      {/* CARDS */}
-      <div className="
-        grid
-        grid-cols-1
-        lg:grid-cols-3
-        gap-6
-        mb-10
-      ">
+      {/* TOTAL PAGADO */}
 
-        {/* ESTADO */}
-        <div className={`
-          ${estado.color}
+      <div className="bg-white rounded-3xl shadow p-8">
 
-          rounded-3xl
-          p-8
-          text-white
-          shadow
-        `}>
+        <div className="flex items-center gap-3 mb-4">
 
-          <div className="
-            flex
-            items-center
-            justify-between
-          ">
+          <CheckCircle className="text-green-600" />
 
-            <div>
+          <h2 className="text-xl font-bold">
 
-              <p className="
-                opacity-90
-              ">
-                Estado actual
-              </p>
+            Total Pagado
 
-              <h2 className="
-                text-3xl
-                font-bold
-                mt-2
-              ">
-                {estado.texto}
-              </h2>
-
-            </div>
-
-            {estado.icon}
-
-          </div>
+          </h2>
 
         </div>
 
-        {/* PROXIMO */}
-        <div className="
-          bg-white
-          rounded-3xl
-          shadow
-          p-8
-        ">
+        <p className="text-3xl font-bold text-green-600">
 
-          <div className="
-            flex
-            items-center
-            gap-4
-            mb-4
-          ">
+          $
 
-            <Calendar
-              className="
-                text-purple-600
-              "
-            />
+          {totalPagado.toLocaleString("es-CL")}
 
-            <h2 className="
-              text-xl
-              font-bold
-            ">
-              Próximo pago
-            </h2>
-
-          </div>
-
-          <p className="
-            text-3xl
-            font-bold
-          ">
-            {
-              proximoPago ||
-              "Sin pendientes"
-            }
-          </p>
-
-        </div>
-
-        {/* TOTAL */}
-        <div className="
-          bg-white
-          rounded-3xl
-          shadow
-          p-8
-        ">
-
-          <div className="
-            flex
-            items-center
-            gap-4
-            mb-4
-          ">
-
-            <CheckCircle
-              className="
-                text-green-600
-              "
-            />
-
-            <h2 className="
-              text-xl
-              font-bold
-            ">
-              Total pagado
-            </h2>
-
-          </div>
-
-          <p className="
-            text-3xl
-            font-bold
-            text-green-600
-          ">
-            ${totalPagado}
-          </p>
-
-        </div>
+        </p>
 
       </div>
 
-      {/* TIMELINE */}
-      <div className="
-        bg-white
-        rounded-3xl
-        shadow
-        p-8
-      ">
+    </div>
+        {/* MENSUALIDADES */}
 
-        <h2 className="
-          text-2xl
-          font-bold
-          mb-8
-        ">
-          Historial de pagos
-        </h2>
+    <div className="bg-white rounded-3xl shadow p-8">
 
-        <div className="
-          space-y-6
-        ">
+      <h2 className="text-2xl font-bold mb-8">
 
-          {pagos.map((pago) => (
+        Mis Mensualidades
+
+      </h2>
+
+      <div className="space-y-6">
+
+        {mensualidades.length === 0 ? (
+
+          <div className="text-center py-16">
+
+            <AlertTriangle
+              size={55}
+              className="mx-auto text-yellow-500 mb-5"
+            />
+
+            <h2 className="text-2xl font-bold mb-2">
+
+              No tienes mensualidades
+
+            </h2>
+
+            <p className="text-gray-500">
+
+              El administrador aún no ha generado tus mensualidades.
+
+            </p>
+
+          </div>
+
+        ) : (
+
+          mensualidades.map((mensualidad) => (
 
             <div
-              key={pago.id}
+              key={mensualidad.id}
               className="
                 border
                 rounded-3xl
@@ -332,168 +392,157 @@ export default function PagosCliente() {
               "
             >
 
-              {/* LEFT */}
+              {/* MES */}
+
               <div>
 
-                <h3 className="
-                  text-2xl
-                  font-bold
-                ">
-                  {pago.mes}
+                <h3 className="text-2xl font-bold">
+
+                  {mensualidad.mes} {mensualidad.anio}
+
                 </h3>
 
-                <p className="
-                  text-gray-500
-                  mt-1
-                ">
-                  {
-                    pago.fecha_pago
-                  }
+                <p className="text-gray-500 mt-1">
+
+                  {mensualidad.fecha_pago
+                    ? `Pagado el ${new Date(
+                        mensualidad.fecha_pago
+                      ).toLocaleDateString("es-CL")}`
+                    : "Aún no pagado"}
+
                 </p>
-
-              </div>
-
-              {/* CENTER */}
-              <div className="
-                flex
-                flex-col
-                gap-2
-              ">
-
-                <p className="
-                  text-gray-500
-                ">
-                  Método pago
-                </p>
-
-                <h3 className="
-                  font-bold
-                ">
-                  {
-                    pago.metodo_pago
-                  }
-                </h3>
 
               </div>
 
               {/* MONTO */}
+
               <div>
 
-                <p className="
-                  text-gray-500
-                ">
-                  Monto
+                <p className="text-gray-500">
+
+                  Mensualidad
+
                 </p>
 
-                <h3 className="
-                  text-2xl
-                  font-bold
-                  text-green-600
-                ">
+                <h3 className="text-2xl font-bold text-green-600">
+
                   $
-                  {pago.monto}
+
+                  {mensualidad.monto.toLocaleString("es-CL")}
+
                 </h3>
 
               </div>
 
               {/* ESTADO */}
+
               <div>
 
-                <span className={`
-                  px-5
-                  py-2
-                  rounded-full
-                  text-white
-                  font-semibold
+                <span
+                  className={`
+                    px-5
+                    py-2
+                    rounded-full
+                    text-white
+                    font-semibold
 
-                  ${
-                    pago.estado ===
-                    "Pagado"
+                    ${
+                      mensualidad.estado === "Pagado"
 
-                    ? "bg-green-500"
+                        ? "bg-green-500"
 
-                    : "bg-red-500"
-                  }
-                `}>
+                        : mensualidad.estado === "Pendiente"
 
-                  {pago.estado}
+                        ? "bg-red-500"
+
+                        : "bg-yellow-500"
+
+                    }
+                  `}
+                >
+
+                  {mensualidad.estado}
 
                 </span>
 
               </div>
 
-              {/* PDF */}
-              <button
-                className="
-                  bg-purple-600
-                  hover:bg-purple-700
-                  text-white
-                  px-6
-                  py-3
-                  rounded-2xl
-                  flex
-                  items-center
-                  gap-2
-                  transition
-                "
-              >
+              {/* BOTONES */}
 
-                <Download size={18} />
+              <div className="flex gap-3">
 
-                Comprobante
+                <label
+  className="
+    bg-purple-600
+    hover:bg-purple-700
+    text-white
+    px-6
+    py-3
+    rounded-2xl
+    transition
+    cursor-pointer
+  "
+>
 
-              </button>
+  <Upload
+    size={18}
+    className="inline mr-2"
+  />
+
+  Subir comprobante
+
+  <input
+    type="file"
+    accept=".jpg,.jpeg,.png,.pdf"
+    hidden
+    onChange={(e) => {
+
+      if (!e.target.files?.length) return;
+
+      subirComprobante(
+        mensualidad.id,
+        e.target.files[0]
+      );
+
+    }}
+  />
+
+</label>
+
+                {mensualidad.comprobante && (
+
+                  <a
+                    href={mensualidad.comprobante}
+                    target="_blank"
+                    className="
+                      bg-blue-600
+                      hover:bg-blue-700
+                      text-white
+                      px-6
+                      py-3
+                      rounded-2xl
+                      transition
+                    "
+                  >
+
+                    Ver comprobante
+
+                  </a>
+
+                )}
+
+              </div>
 
             </div>
 
-          ))}
+          ))
 
-        </div>
+        )}
 
       </div>
 
-      {/* VACIO */}
-      {
-        pagos.length === 0 && (
-
-          <div className="
-            bg-white
-            rounded-3xl
-            shadow
-            p-12
-            text-center
-            mt-10
-          ">
-
-            <AlertTriangle
-              size={50}
-              className="
-                mx-auto
-                text-yellow-500
-                mb-4
-              "
-            />
-
-            <h2 className="
-              text-2xl
-              font-bold
-              mb-2
-            ">
-              No hay pagos registrados
-            </h2>
-
-            <p className="
-              text-gray-500
-            ">
-              Aún no existen pagos
-              en tu cuenta
-            </p>
-
-          </div>
-
-        )
-      }
-
     </div>
-  );
+  </div>
+
+);
 }
